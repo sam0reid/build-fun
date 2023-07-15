@@ -1,0 +1,48 @@
+
+version: '3'
+
+vars:
+  BUILD_DIR: "{{.TASKFILE_DIR}}/build"
+  INSTALL_DIR: "{{.TASKFILE_DIR}}/install"
+
+tasks:
+  clean:
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - rm -rf {{.INSTALL_DIR}}
+
+  build_template:
+    cmds:
+      - |
+        mkdir -p {{.BUILD_DIR}}/{{.PACKAGE}} &&
+        pushd {{.BUILD_DIR}}/{{.PACKAGE}} &&
+        cmake ../../{{.PACKAGE}} -DCMAKE_INSTALL_PREFIX={{.INSTALL_DIR}}/{{.PACKAGE}} -DCMAKE_BUILD_TYPE=Debug&&
+        cmake --build . &&
+        cmake --install . &&
+        popd
+
+    vars:
+      PACKAGE: "{{.PACKAGE}}"
+
+  build_special:
+    cmds:
+      - task: build_template
+        vars: { PACKAGE : special_math }
+
+  build_calculator:
+    cmds:
+      - task: build_template
+        vars: { PACKAGE : calculator }
+
+  build_client:
+    cmds:
+      - task: build_template
+        vars: { PACKAGE : client }
+
+  build:
+    cmds:
+      - task clean
+      - task build_special
+      - task build_calculator
+      - task build_client
+      - ./build/client/client
